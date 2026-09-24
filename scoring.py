@@ -13,6 +13,19 @@ and neither function has been checked against bad input.
 
 def session_rating(combined_score: int) -> str:
     """Rate a study session from its combined minutes+focus score. Correct and tested."""
+    if isinstance(combined_score, float):
+        # A decimal here is a real bug -- minutes and focus are always whole
+        # numbers, so truncate back to the intended whole-number score.
+        combined_score = int(combined_score)
+
+    if combined_score < 0:
+        # Negative scores are input the function was never meant to receive --
+        # treat them the same as the lowest tier.
+        return "Skip"
+    if combined_score > 100:
+        # Scores over 100 are input the function was never meant to receive --
+        # treat them the same as the top tier.
+        return "Great"
     if combined_score >= 90:
         return "Great"
     if combined_score >= 80:
@@ -45,12 +58,18 @@ def render_session_scorer_tab():
 
 
 def run_demo():
+    from scoring_helpers import apply_streak_bonus
+
     sessions = [55, 68, 82, 91, 77]
     streak = 3
     for raw in sessions:
         boosted = apply_streak_bonus(raw, streak)
         rating = session_rating(boosted)
         print(f"Raw: {raw} -> Boosted: {boosted} -> Rating: {rating}")
+
+    print(session_rating(-20))  # an input the function was never meant to recieve
+    print(session_rating(105))  # an input the function was never meant to recieve
+    print(session_rating(87.5))  # a real bug
 
 
 if __name__ == "__main__":
